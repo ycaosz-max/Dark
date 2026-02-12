@@ -1,6 +1,5 @@
-# AI简报小助手 - 哥特式暗黑版 v2.1
-# 原名：VIGIL AETERNUS · 永恒守望者
-# 修复：API 密钥状态管理问题
+# AI简报小助手 - 哥特式暗黑版 v2.2
+# 修复：语音转文字结果不显示的问题
 
 import streamlit as st
 from openai import OpenAI
@@ -24,14 +23,14 @@ st.markdown("""
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🩸</text></svg>">
 
 <script>
-// 强制暗黑模式，无视系统设置
+// 强制暗黑模式
 document.documentElement.style.colorScheme = 'dark';
 if (document.body) {
     document.body.style.backgroundColor = '#050508';
     document.body.style.color = '#a0a0a0';
 }
 
-// 录音计时器与状态管理
+// 录音计时器
 let recordingTimer = null;
 let recordingStartTime = null;
 let isRecording = false;
@@ -69,66 +68,44 @@ function startRecordingTimer() {
                 border: 2px solid #8b0000;
                 border-radius: 20px;
                 padding: 40px;
-                box-shadow: 0 0 50px rgba(139, 0, 0, 0.5), inset 0 0 30px rgba(139, 0, 0, 0.1);
-                backdrop-filter: blur(10px);
+                box-shadow: 0 0 50px rgba(139, 0, 0, 0.5);
             }
-            .gothic-eye {
-                width: 80px;
-                height: 80px;
-                margin: 0 auto 20px;
-                position: relative;
-            }
+            .gothic-eye { width: 80px; height: 80px; margin: 0 auto 20px; position: relative; }
             .eye-outer {
-                width: 100%;
-                height: 100%;
+                width: 100%; height: 100%;
                 border: 3px solid #8b0000;
                 border-radius: 50%;
                 position: absolute;
                 animation: pulse 2s infinite;
-                box-shadow: 0 0 20px rgba(139, 0, 0, 0.6);
             }
             .eye-inner {
-                width: 60%;
-                height: 60%;
+                width: 60%; height: 60%;
                 background: #4a0404;
                 border-radius: 50%;
                 position: absolute;
-                top: 20%;
-                left: 20%;
-                animation: pulse 1.5s infinite reverse;
+                top: 20%; left: 20%;
             }
             .eye-pupil {
-                width: 30%;
-                height: 30%;
+                width: 30%; height: 30%;
                 background: #ff1a1a;
                 border-radius: 50%;
                 position: absolute;
-                top: 35%;
-                left: 35%;
+                top: 35%; left: 35%;
                 box-shadow: 0 0 10px #ff1a1a;
             }
             .timer-text {
                 font-size: 48px;
                 color: #ff1a1a;
-                font-family: 'Courier New', monospace;
+                font-family: monospace;
                 font-weight: bold;
-                text-shadow: 0 0 10px rgba(255, 26, 26, 0.5);
-                margin: 10px 0;
-            }
-            .timer-label {
-                font-size: 14px;
-                color: #666;
-                font-family: serif;
-                letter-spacing: 2px;
             }
             @keyframes pulse {
-                0%, 100% { transform: scale(1); opacity: 0.8; }
-                50% { transform: scale(1.1); opacity: 1; }
+                0%, 100% { transform: scale(1); }
+                50% { transform: scale(1.1); }
             }
         `;
         document.head.appendChild(style);
     }
-    
     overlay.style.display = 'block';
     
     recordingTimer = setInterval(function() {
@@ -137,7 +114,6 @@ function startRecordingTimer() {
         const minutes = Math.floor(seconds / 60);
         const secs = seconds % 60;
         const timeStr = (minutes < 10 ? '0' + minutes : minutes) + ':' + (secs < 10 ? '0' + secs : secs);
-        
         const timerText = overlay.querySelector('.timer-text');
         if (timerText) timerText.textContent = timeStr;
     }, 1000);
@@ -148,46 +124,30 @@ function stopRecordingTimer() {
     isRecording = false;
     clearInterval(recordingTimer);
     
-    const endTime = Date.now();
-    const duration = endTime - recordingStartTime;
-    const seconds = Math.floor(duration / 1000);
-    const minutes = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    const timeStr = (minutes < 10 ? '0' + minutes : minutes) + ':' + (secs < 10 ? '0' + secs : secs);
-    
     const overlay = document.getElementById('gothic-timer');
     if (overlay) {
         overlay.innerHTML = `
-            <div style="font-size: 60px; color: #8b0000; margin-bottom: 10px;">✦</div>
-            <div class="timer-text" style="font-size: 36px; color: #c0c0c0;">${timeStr}</div>
-            <div class="timer-label" style="color: #8b0000; margin-top: 10px;">灵魂已捕获</div>
-            <div style="font-size: 12px; color: #444; margin-top: 15px;">正在炼金转录...</div>
+            <div style="font-size: 60px; color: #8b0000;">✦</div>
+            <div style="font-size: 36px; color: #c0c0c0; margin: 10px 0;">灵魂已捕获</div>
+            <div style="font-size: 12px; color: #666;">正在炼金转录...</div>
         `;
-        
-        setTimeout(function() {
-            overlay.style.display = 'none';
-        }, 3000);
+        setTimeout(() => overlay.style.display = 'none', 2000);
     }
-    
-    sessionStorage.setItem('last_recording_duration', timeStr);
-    sessionStorage.setItem('last_recording_seconds', seconds.toString());
 }
 
+// 监听按钮
 const observer = new MutationObserver(function(mutations) {
     const buttons = document.querySelectorAll('button');
     buttons.forEach(button => {
-        const text = button.textContent || button.innerText;
-        if ((text.includes('开始') || text.includes('🩸')) && !isRecording && !button.hasAttribute('data-listening')) {
-            button.setAttribute('data-listening', 'true');
+        const text = button.textContent || '';
+        if ((text.includes('开始') || text.includes('🩸')) && !isRecording) {
             button.addEventListener('click', startRecordingTimer);
         }
-        if ((text.includes('停止') || text.includes('⏹')) && isRecording && !button.hasAttribute('data-stopping')) {
-            button.setAttribute('data-stopping', 'true');
+        if ((text.includes('停止') || text.includes('⏹')) && isRecording) {
             button.addEventListener('click', stopRecordingTimer);
         }
     });
 });
-
 observer.observe(document.body, { childList: true, subtree: true });
 </script>
 """, unsafe_allow_html=True)
@@ -214,18 +174,15 @@ st.markdown("""
     --text-secondary: #666666;
     --text-muted: #444444;
     --border-color: #2a2a30;
-    --glow-red: rgba(139, 0, 0, 0.3);
 }
 
 .stApp {
     background-color: var(--bg-primary) !important;
     color: var(--text-primary) !important;
-    font-family: 'Courier New', 'Cinzel', serif !important;
+    font-family: 'Courier New', serif !important;
 }
 
-header[data-testid="stHeader"] {
-    display: none;
-}
+header[data-testid="stHeader"] { display: none; }
 
 .main .block-container {
     background-color: var(--bg-primary);
@@ -242,14 +199,11 @@ header[data-testid="stHeader"] {
     text-transform: uppercase;
     margin-bottom: 5px;
     text-shadow: 0 0 20px rgba(139, 0, 0, 0.5);
-    font-family: 'Cinzel', 'Trajan Pro', serif !important;
     border-bottom: 2px solid var(--accent-blood);
     padding-bottom: 15px;
-    position: relative;
 }
 
-.gothic-title::before,
-.gothic-title::after {
+.gothic-title::before, .gothic-title::after {
     content: '◈';
     color: var(--accent-blood);
     margin: 0 20px;
@@ -263,7 +217,6 @@ header[data-testid="stHeader"] {
     font-style: italic;
     letter-spacing: 4px;
     margin-bottom: 40px;
-    font-family: serif;
 }
 
 .gothic-panel {
@@ -272,8 +225,7 @@ header[data-testid="stHeader"] {
     border-radius: 8px;
     padding: 25px;
     margin: 10px 0;
-    position: relative;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.05);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.5);
 }
 
 .gothic-panel::before {
@@ -298,8 +250,7 @@ header[data-testid="stHeader"] {
     padding-bottom: 10px;
 }
 
-.panel-title::before,
-.panel-title::after {
+.panel-title::before, .panel-title::after {
     content: '◆';
     color: var(--accent-blood);
     margin: 0 10px;
@@ -320,7 +271,6 @@ header[data-testid="stHeader"] {
     border: 3px solid var(--accent-blood);
     border-radius: 50%;
     position: absolute;
-    transition: all 0.3s ease;
     box-shadow: 0 0 30px rgba(139, 0, 0, 0.4);
 }
 
@@ -332,7 +282,6 @@ header[data-testid="stHeader"] {
     position: absolute;
     top: 20%;
     left: 20%;
-    transition: all 0.3s ease;
 }
 
 .eye-pupil {
@@ -349,7 +298,7 @@ header[data-testid="stHeader"] {
 
 @keyframes pulse {
     0%, 100% { transform: scale(1); opacity: 0.8; }
-    50% { transform: scale(1.2); opacity: 1; box-shadow: 0 0 25px var(--accent-bright); }
+    50% { transform: scale(1.2); opacity: 1; }
 }
 
 .stButton>button {
@@ -363,20 +312,12 @@ header[data-testid="stHeader"] {
     text-transform: uppercase !important;
     font-size: 12px !important;
     transition: all 0.3s ease !important;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.3) !important;
-    position: relative;
-    overflow: hidden;
 }
 
 .stButton>button:hover {
     background: linear-gradient(135deg, #2a0000, #3a0000) !important;
     border-color: var(--accent-bright) !important;
     box-shadow: 0 0 20px rgba(139, 0, 0, 0.4) !important;
-    transform: translateY(-2px);
-}
-
-.stButton>button:active {
-    transform: translateY(0);
 }
 
 .stButton>button[kind="primary"] {
@@ -392,12 +333,6 @@ header[data-testid="stHeader"] {
     border: 1px solid var(--border-color) !important;
     border-radius: 4px !important;
     font-family: 'Courier New', monospace !important;
-    box-shadow: inset 0 2px 4px rgba(0,0,0,0.5) !important;
-}
-
-.stTextInput input:focus, .stTextArea textarea:focus {
-    border-color: var(--accent-blood) !important;
-    box-shadow: 0 0 10px rgba(139, 0, 0, 0.2), inset 0 2px 4px rgba(0,0,0,0.5) !important;
 }
 
 .stTextArea textarea {
@@ -405,85 +340,21 @@ header[data-testid="stHeader"] {
     line-height: 1.8 !important;
 }
 
-.css-1d391kg, .css-163ttbj, section[data-testid="stSidebar"] {
+section[data-testid="stSidebar"] {
     background-color: var(--bg-secondary) !important;
     border-right: 1px solid var(--border-color) !important;
-}
-
-section[data-testid="stSidebar"] .block-container {
-    background-color: transparent !important;
 }
 
 .stFileUploader > div > div {
     background-color: var(--bg-tertiary) !important;
     border: 2px dashed var(--border-color) !important;
     color: var(--text-secondary) !important;
-    border-radius: 8px !important;
-}
-
-.stFileUploader > div > div:hover {
-    border-color: var(--accent-blood) !important;
-    background-color: rgba(139, 0, 0, 0.05) !important;
 }
 
 .stAlert {
     background-color: var(--bg-tertiary) !important;
     color: var(--text-primary) !important;
-    border: 1px solid var(--border-color) !important;
     border-left: 4px solid var(--accent-blood) !important;
-    border-radius: 4px !important;
-}
-
-.stSuccess {
-    border-left-color: #1a4a1a !important;
-    background-color: rgba(26, 74, 26, 0.1) !important;
-}
-
-.stError {
-    border-left-color: var(--accent-bright) !important;
-    background-color: rgba(255, 26, 26, 0.05) !important;
-}
-
-hr {
-    border-color: var(--border-color) !important;
-    margin: 30px 0 !important;
-    position: relative;
-}
-
-hr::after {
-    content: '◈';
-    position: absolute;
-    left: 50%;
-    top: 50%;
-    transform: translate(-50%, -50%);
-    background: var(--bg-primary);
-    color: var(--accent-blood);
-    padding: 0 10px;
-    font-size: 12px;
-}
-
-.status-indicator {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    font-family: 'Courier New', monospace;
-    font-size: 11px;
-    color: var(--text-secondary);
-    letter-spacing: 1px;
-}
-
-.status-dot {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background-color: var(--accent-blood);
-    animation: blink 2s infinite;
-    box-shadow: 0 0 10px var(--accent-blood);
-}
-
-@keyframes blink {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.3; }
 }
 
 .timer-display {
@@ -500,7 +371,6 @@ hr::after {
     color: var(--accent-bright);
     font-family: 'Courier New', monospace;
     font-weight: bold;
-    text-shadow: 0 0 10px rgba(255, 26, 26, 0.3);
     letter-spacing: 4px;
 }
 
@@ -514,12 +384,10 @@ hr::after {
     font-family: 'Courier New', monospace;
     line-height: 1.8;
     color: var(--text-primary);
-    box-shadow: inset 0 2px 10px rgba(0,0,0,0.5);
 }
 
 ::-webkit-scrollbar {
     width: 8px;
-    height: 8px;
 }
 
 ::-webkit-scrollbar-track {
@@ -531,52 +399,26 @@ hr::after {
     border-radius: 4px;
 }
 
-::-webkit-scrollbar-thumb:hover {
-    background: var(--accent-bright);
+.status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: var(--accent-blood);
+    animation: blink 2s infinite;
+    display: inline-block;
+    margin-right: 8px;
 }
 
-.stDownloadButton > button {
-    background: var(--bg-tertiary) !important;
-    border-color: var(--border-color) !important;
-    color: var(--text-secondary) !important;
-}
-
-.stDownloadButton > button:hover {
-    border-color: var(--accent-blood) !important;
-    color: var(--text-primary) !important;
-}
-
-@media (max-width: 768px) {
-    .gothic-title { font-size: 28px; letter-spacing: 4px; }
-    .gothic-title::before, .gothic-title::after { display: none; }
-    .main .block-container { padding: 1rem; }
-}
-
-.stSpinner > div {
-    border-top-color: var(--accent-blood) !important;
-    border-right-color: transparent !important;
-    border-bottom-color: var(--accent-blood) !important;
-    border-left-color: transparent !important;
-}
-
-p, h1, h2, h3, h4, h5, h6, span, label, .stMarkdown {
-    color: var(--text-primary) !important;
-}
-
-div[role="listbox"] div {
-    background-color: var(--bg-tertiary) !important;
-    color: var(--text-primary) !important;
-}
-
-div[role="option"]:hover {
-    background-color: rgba(139, 0, 0, 0.2) !important;
+@keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
 }
 </style>
 """, unsafe_allow_html=True)
 
 # ========== 核心功能函数 ==========
 def transcribe_audio(audio_bytes, api_key):
-    """语音转文字 - 炼金术核心"""
+    """语音转文字"""
     try:
         client = OpenAI(api_key=api_key, base_url="https://api.siliconflow.cn/v1")
         
@@ -598,7 +440,7 @@ def transcribe_audio(audio_bytes, api_key):
         return {"success": False, "error": str(e)}
 
 def generate_briefing(content, briefing_type, custom_req, api_key):
-    """生成简报 - 炼金术转化"""
+    """生成简报"""
     try:
         client = OpenAI(api_key=api_key, base_url="https://api.siliconflow.cn/v1")
         
@@ -656,21 +498,27 @@ def generate_briefing(content, briefing_type, custom_req, api_key):
     except Exception as e:
         return {"success": False, "error": str(e)}
 
-# ========== API 密钥管理（修复版）==========
-# 优先从 secrets 获取，否则从 session_state 获取
+# ========== 初始化 Session State ==========
+if "transcribed_text" not in st.session_state:
+    st.session_state.transcribed_text = ""
+if "generated_result" not in st.session_state:
+    st.session_state.generated_result = ""
+if "transcription_count" not in st.session_state:
+    st.session_state.transcription_count = 0
+if "last_duration" not in st.session_state:
+    st.session_state.last_duration = ""
+
+# ========== API 密钥管理 ==========
 api_key = None
 
-# 首先检查 st.secrets（部署环境）
 try:
     api_key = st.secrets.get("SILICONFLOW_API_KEY", "")
 except:
     pass
 
-# 如果 secrets 中没有，检查 session_state（用户输入）
 if not api_key:
     api_key = st.session_state.get("api_key", "")
 
-# 如果都没有，显示输入界面
 if not api_key:
     st.markdown('<div class="gothic-title">VIGIL AETERNUS</div>', unsafe_allow_html=True)
     st.markdown('<div class="gothic-subtitle">永恒守望者 · 语音炼金术</div>', unsafe_allow_html=True)
@@ -678,7 +526,7 @@ if not api_key:
     with st.expander("🔑 唤醒炼金引擎（输入API密钥）", expanded=True):
         st.markdown("""
         <div style="background: rgba(139,0,0,0.05); padding: 20px; border-radius: 8px; border-left: 3px solid #8b0000;">
-            <p style="margin: 0; color: #888; font-family: serif;">
+            <p style="margin: 0; color: #888;">
                 要启动这台古老的语音炼金装置，你需要提供灵魂密钥：<br><br>
                 1. 前往 <a href="https://siliconflow.cn" style="color: #ff1a1a;">siliconflow.cn</a> 进行血之契约（注册）<br>
                 2. 在祭坛上创建 API 密钥<br>
@@ -699,7 +547,6 @@ if not api_key:
         with col2:
             if st.button("⚡ 激活炼金引擎", type="primary", use_container_width=True):
                 if api_input and api_input.startswith("sk-"):
-                    # 保存到 session_state
                     st.session_state.api_key = api_input
                     st.success("✦ 炼金引擎已唤醒 ✦")
                     time.sleep(1)
@@ -713,14 +560,14 @@ if not api_key:
 st.markdown('<div class="gothic-title">VIGIL AETERNUS</div>', unsafe_allow_html=True)
 st.markdown('<div class="gothic-subtitle">永恒守望者 · 语音炼金术</div>', unsafe_allow_html=True)
 
-# 侧边栏 - 暗影之书
+# 侧边栏
 with st.sidebar:
     st.markdown('<div style="text-align: center; color: #8b0000; font-size: 24px; margin-bottom: 20px;">◈</div>', unsafe_allow_html=True)
-    st.markdown('<div style="text-align: center; color: #c0c0c0; font-family: serif; letter-spacing: 3px; margin-bottom: 30px;">炼金日志</div>', unsafe_allow_html=True)
+    st.markdown('<div style="text-align: center; color: #c0c0c0; letter-spacing: 3px; margin-bottom: 30px;">炼金日志</div>', unsafe_allow_html=True)
     
-    st.markdown("""
-    <div class="status-indicator" style="margin-bottom: 20px;">
-        <div class="status-dot"></div>
+    st.markdown(f"""
+    <div style="margin-bottom: 20px; color: #666; font-size: 11px;">
+        <span class="status-dot"></span>
         <span>引擎运转中</span>
     </div>
     """, unsafe_allow_html=True)
@@ -732,14 +579,13 @@ with st.sidebar:
     
     st.divider()
     
-    st.markdown('<div style="color: #666; font-size: 11px; letter-spacing: 2px; margin-bottom: 10px;">已捕获灵魂残片</div>', unsafe_allow_html=True)
-    count = st.session_state.get("transcription_count", 0)
-    st.markdown(f'<div style="color: #8b0000; font-size: 28px; font-family: monospace; text-align: center;">{count:,}</div>', unsafe_allow_html=True)
+    st.markdown('<div style="color: #666; font-size: 11px; margin-bottom: 10px;">已捕获灵魂残片</div>', unsafe_allow_html=True)
+    st.markdown(f'<div style="color: #8b0000; font-size: 28px; font-family: monospace; text-align: center;">{st.session_state.transcription_count:,}</div>', unsafe_allow_html=True)
     
     st.divider()
-    st.caption("v2.1 · 哥特式暗黑版 · 已修复")
+    st.caption("v2.2 · 已修复转录显示")
 
-# 主界面 - 三栏炼金工坊
+# 主界面 - 三栏布局
 col_left, col_center, col_right = st.columns([1, 1.2, 1])
 
 # ========== 左栏：灵魂捕获 ==========
@@ -750,16 +596,17 @@ with col_left:
     """, unsafe_allow_html=True)
     
     st.markdown("""
-    <div class="eye-button" onclick="document.querySelector('button[kind=secondary]').click()">
+    <div class="eye-button">
         <div class="eye-outer"></div>
         <div class="eye-inner"></div>
         <div class="eye-pupil"></div>
     </div>
-    <div style="text-align: center; color: #666; font-size: 11px; letter-spacing: 2px; margin-top: -10px; margin-bottom: 20px;">
+    <div style="text-align: center; color: #666; font-size: 11px; letter-spacing: 2px; margin-bottom: 20px;">
         点击启动聆听仪式
     </div>
     """, unsafe_allow_html=True)
     
+    # 实时录音
     try:
         from streamlit_mic_recorder import mic_recorder
         
@@ -767,9 +614,10 @@ with col_left:
             start_prompt="🩸 开始聆听",
             stop_prompt="⏹ 封印灵魂",
             just_once=True,
-            key="gothic_recorder"
+            key="gothic_recorder_main"
         )
         
+        # 关键修复：在这里处理录音，不使用 rerun()
         if audio and audio.get("bytes"):
             bytes_data = audio["bytes"]
             sample_rate = audio.get("sample_rate", 16000)
@@ -779,36 +627,43 @@ with col_left:
             seconds = int(duration_seconds % 60)
             duration_str = f"{minutes:02d}:{seconds:02d}"
             
+            # 显示计时器
             st.markdown(f"""
             <div class="timer-display">
                 <div class="timer-value">{duration_str}</div>
-                <div style="color: #666; font-size: 11px; letter-spacing: 2px;">灵魂时长</div>
+                <div style="color: #666; font-size: 11px;">灵魂时长</div>
             </div>
             """, unsafe_allow_html=True)
             
+            # 转录
             with st.spinner("⚗️ 炼金转录中..."):
                 result = transcribe_audio(audio["bytes"], api_key)
                 
                 if result["success"]:
+                    # 直接更新 session_state，不调用 rerun()
                     st.session_state.transcribed_text = result["text"]
                     st.session_state.last_duration = duration_str
-                    st.session_state.transcription_count = st.session_state.get("transcription_count", 0) + 1
+                    st.session_state.transcription_count += 1
                     st.success(f"✦ 灵魂已捕获 | {len(result['text'])} 字符")
-                    st.rerun()
+                    # 使用 experimental_rerun 替代 rerun 避免重置
+                    st.experimental_rerun()
                 else:
                     st.error(f"✦ 转录失败: {result['error']}")
                     
     except ImportError:
         st.error("⚠️ 录音组件未就绪")
+        st.info("请安装: pip install streamlit-mic-recorder")
     
     st.divider()
     
+    # 文件上传
     st.markdown('<div style="color: #888; font-size: 12px; margin-bottom: 10px;">或上传记忆残片</div>', unsafe_allow_html=True)
     
     audio_file = st.file_uploader(
         "选择录音",
         type=['mp3', 'wav', 'm4a', 'webm'],
-        label_visibility="collapsed"
+        label_visibility="collapsed",
+        key="audio_upload"
     )
     
     if audio_file:
@@ -820,9 +675,9 @@ with col_left:
                 
                 if result["success"]:
                     st.session_state.transcribed_text = result["text"]
-                    st.session_state.transcription_count = st.session_state.get("transcription_count", 0) + 1
+                    st.session_state.transcription_count += 1
                     st.success(f"✦ 转录完成 | {len(result['text'])} 字符")
-                    st.rerun()
+                    st.experimental_rerun()
                 else:
                     st.error(f"✦ 失败: {result['error']}")
     
@@ -838,26 +693,26 @@ with col_center:
     briefing_type = st.selectbox(
         "炼金仪式类型",
         ["会议纪要", "工作日报", "学习笔记", "新闻摘要"],
-        key="briefing_type"
+        key="briefing_type_select"
     )
     
-    default_text = st.session_state.get("transcribed_text", "")
-    
+    # 关键修复：使用 value 参数绑定 session_state
     content = st.text_area(
         "原始灵魂印记",
-        value=default_text,
+        value=st.session_state.transcribed_text,
         height=280,
         placeholder="在此刻下你的话语，或等待语音捕获...\n\n如同在羊皮纸上书写，每一个字都将被永恒铭记。",
-        key="content_editor"
+        key="content_editor_main"
     )
     
-    if content != st.session_state.get("transcribed_text", ""):
+    # 同步更新
+    if content != st.session_state.transcribed_text:
         st.session_state.transcribed_text = content
     
     custom_req = st.text_input(
         "特殊炼金指令",
         placeholder="例如：强调时间紧迫性、突出风险...",
-        key="custom_requirements"
+        key="custom_req_input"
     )
     
     col_gen, col_clear = st.columns([2, 1])
@@ -872,16 +727,16 @@ with col_center:
                     
                     if result["success"]:
                         st.session_state.generated_result = result["text"]
-                        st.balloons()
+                        st.success("✦ 炼金完成 ✦")
+                        st.experimental_rerun()
                     else:
                         st.error(f"✦ 炼金失败: {result['error']}")
     
     with col_clear:
         if st.button("🗑️ 净化", use_container_width=True):
             st.session_state.transcribed_text = ""
-            if "generated_result" in st.session_state:
-                del st.session_state.generated_result
-            st.rerun()
+            st.session_state.generated_result = ""
+            st.experimental_rerun()
     
     st.markdown("</div>", unsafe_allow_html=True)
 
@@ -892,7 +747,7 @@ with col_right:
         <div class="panel-title">预言书卷</div>
     """, unsafe_allow_html=True)
     
-    if "generated_result" in st.session_state:
+    if st.session_state.generated_result:
         result_text = st.session_state.generated_result
         
         st.markdown(f"""
@@ -907,7 +762,7 @@ with col_right:
         </div>
         """, unsafe_allow_html=True)
         
-        col_dl, col_copy = st.columns(2)
+        col_dl, _ = st.columns([1, 1])
         
         with col_dl:
             st.download_button(
@@ -916,13 +771,9 @@ with col_right:
                 file_name=f"{briefing_type}_{time.strftime('%Y%m%d_%H%M')}.txt",
                 use_container_width=True
             )
-        
-        with col_copy:
-            if st.button("📋 复制", use_container_width=True):
-                st.toast("✦ 已复制到剪贴板 ✦")
     else:
         st.markdown("""
-        <div style="text-align: center; padding: 60px 20px; color: #333; font-style: italic;">
+        <div style="text-align: center; padding: 60px 20px; color: #333;">
             <div style="font-size: 48px; margin-bottom: 20px; opacity: 0.3;">◈</div>
             <div style="font-size: 12px; letter-spacing: 2px;">
                 等待炼金术启动<br>
@@ -935,10 +786,8 @@ with col_right:
 
 # 底部装饰
 st.markdown("""
-<div style="text-align: center; margin-top: 40px; padding-top: 20px; border-top: 1px solid #1a1a20; color: #333; font-size: 11px; letter-spacing: 3px; font-family: serif;">
+<div style="text-align: center; margin-top: 40px; padding-top: 20px; border-top: 1px solid #1a1a20; color: #333; font-size: 11px; letter-spacing: 3px;">
     ✦ MEMENTO MORI ✦<br>
     <span style="font-size: 9px; opacity: 0.6;">记住你终将死去，因此每一句话都值得被铭记</span>
 </div>
 """, unsafe_allow_html=True)
-
-st.caption("")
