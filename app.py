@@ -1,6 +1,6 @@
-# AI简报小助手 - 哥特式暗黑版 v2.0
+# AI简报小助手 - 哥特式暗黑版 v2.1
 # 原名：VIGIL AETERNUS · 永恒守望者
-# 基于语音版v2.1.1，全面重构为哥特式暗黑主题
+# 修复：API 密钥状态管理问题
 
 import streamlit as st
 from openai import OpenAI
@@ -26,21 +26,21 @@ st.markdown("""
 <script>
 // 强制暗黑模式，无视系统设置
 document.documentElement.style.colorScheme = 'dark';
-document.body.style.backgroundColor = '#050508';
-document.body.style.color = '#a0a0a0';
+if (document.body) {
+    document.body.style.backgroundColor = '#050508';
+    document.body.style.color = '#a0a0a0';
+}
 
 // 录音计时器与状态管理
 let recordingTimer = null;
 let recordingStartTime = null;
 let isRecording = false;
-let pulseAnimation = null;
 
 function startRecordingTimer() {
     if (isRecording) return;
     isRecording = true;
     recordingStartTime = Date.now();
     
-    // 创建哥特式计时器覆盖层
     let overlay = document.getElementById('gothic-timer');
     if (!overlay) {
         overlay = document.createElement('div');
@@ -56,7 +56,6 @@ function startRecordingTimer() {
         `;
         document.body.appendChild(overlay);
         
-        // 添加脉冲动画样式
         const style = document.createElement('style');
         style.textContent = `
             #gothic-timer {
@@ -132,7 +131,6 @@ function startRecordingTimer() {
     
     overlay.style.display = 'block';
     
-    // 启动计时器
     recordingTimer = setInterval(function() {
         const elapsed = Date.now() - recordingStartTime;
         const seconds = Math.floor(elapsed / 1000);
@@ -175,7 +173,6 @@ function stopRecordingTimer() {
     sessionStorage.setItem('last_recording_seconds', seconds.toString());
 }
 
-// 监听按钮变化
 const observer = new MutationObserver(function(mutations) {
     const buttons = document.querySelectorAll('button');
     buttons.forEach(button => {
@@ -206,7 +203,6 @@ st.set_page_config(
 # ========== 哥特式暗黑CSS ==========
 st.markdown("""
 <style>
-/* 强制暗黑基础变量 */
 :root {
     --bg-primary: #050508;
     --bg-secondary: #0a0a0f;
@@ -221,26 +217,22 @@ st.markdown("""
     --glow-red: rgba(139, 0, 0, 0.3);
 }
 
-/* 全局强制暗黑 */
 .stApp {
     background-color: var(--bg-primary) !important;
     color: var(--text-primary) !important;
     font-family: 'Courier New', 'Cinzel', serif !important;
 }
 
-/* 隐藏默认头部 */
 header[data-testid="stHeader"] {
     display: none;
 }
 
-/* 主容器 */
 .main .block-container {
     background-color: var(--bg-primary);
     padding: 2rem;
     max-width: 1200px;
 }
 
-/* 哥特式标题 */
 .gothic-title {
     font-size: 42px;
     color: var(--text-primary);
@@ -274,7 +266,6 @@ header[data-testid="stHeader"] {
     font-family: serif;
 }
 
-/* 面板样式 - 哥特式边框 */
 .gothic-panel {
     background-color: var(--bg-secondary);
     border: 1px solid var(--border-color);
@@ -315,7 +306,6 @@ header[data-testid="stHeader"] {
     font-size: 12px;
 }
 
-/* 聆听之眼按钮样式 */
 .eye-button {
     width: 120px;
     height: 120px;
@@ -362,7 +352,6 @@ header[data-testid="stHeader"] {
     50% { transform: scale(1.2); opacity: 1; box-shadow: 0 0 25px var(--accent-bright); }
 }
 
-/* 按钮样式 - 炼金术风格 */
 .stButton>button {
     background: linear-gradient(135deg, #1a0000, #2a0000) !important;
     color: var(--text-primary) !important;
@@ -390,22 +379,6 @@ header[data-testid="stHeader"] {
     transform: translateY(0);
 }
 
-.stButton>button::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255,26,26,0.1), transparent);
-    transition: left 0.5s;
-}
-
-.stButton>button:hover::before {
-    left: 100%;
-}
-
-/* 主要行动按钮 - 血红色 */
 .stButton>button[kind="primary"] {
     background: linear-gradient(135deg, var(--accent-blood), #4a0000) !important;
     border-color: var(--accent-bright) !important;
@@ -413,7 +386,6 @@ header[data-testid="stHeader"] {
     font-weight: bold !important;
 }
 
-/* 输入框样式 - 羊皮纸暗黑版 */
 .stTextInput input, .stTextArea textarea, .stSelectbox > div > div {
     background-color: var(--bg-tertiary) !important;
     color: var(--text-primary) !important;
@@ -428,13 +400,11 @@ header[data-testid="stHeader"] {
     box-shadow: 0 0 10px rgba(139, 0, 0, 0.2), inset 0 2px 4px rgba(0,0,0,0.5) !important;
 }
 
-/* 文本区域特殊样式 */
 .stTextArea textarea {
     min-height: 300px !important;
     line-height: 1.8 !important;
 }
 
-/* 侧边栏 - 暗影之书风格 */
 .css-1d391kg, .css-163ttbj, section[data-testid="stSidebar"] {
     background-color: var(--bg-secondary) !important;
     border-right: 1px solid var(--border-color) !important;
@@ -444,7 +414,6 @@ section[data-testid="stSidebar"] .block-container {
     background-color: transparent !important;
 }
 
-/* 文件上传区域 */
 .stFileUploader > div > div {
     background-color: var(--bg-tertiary) !important;
     border: 2px dashed var(--border-color) !important;
@@ -457,7 +426,6 @@ section[data-testid="stSidebar"] .block-container {
     background-color: rgba(139, 0, 0, 0.05) !important;
 }
 
-/* 警告与信息框 - 哥特式风格 */
 .stAlert {
     background-color: var(--bg-tertiary) !important;
     color: var(--text-primary) !important;
@@ -476,7 +444,6 @@ section[data-testid="stSidebar"] .block-container {
     background-color: rgba(255, 26, 26, 0.05) !important;
 }
 
-/* 分割线 */
 hr {
     border-color: var(--border-color) !important;
     margin: 30px 0 !important;
@@ -495,7 +462,6 @@ hr::after {
     font-size: 12px;
 }
 
-/* 状态指示器 */
 .status-indicator {
     display: inline-flex;
     align-items: center;
@@ -520,7 +486,6 @@ hr::after {
     50% { opacity: 0.3; }
 }
 
-/* 计时器显示 */
 .timer-display {
     text-align: center;
     padding: 20px;
@@ -539,7 +504,6 @@ hr::after {
     letter-spacing: 4px;
 }
 
-/* 输出区域 - 预言书卷 */
 .output-scroll {
     background-color: var(--bg-tertiary);
     border: 1px solid var(--border-color);
@@ -553,7 +517,6 @@ hr::after {
     box-shadow: inset 0 2px 10px rgba(0,0,0,0.5);
 }
 
-/* 自定义滚动条 */
 ::-webkit-scrollbar {
     width: 8px;
     height: 8px;
@@ -572,7 +535,6 @@ hr::after {
     background: var(--accent-bright);
 }
 
-/* 下载按钮 */
 .stDownloadButton > button {
     background: var(--bg-tertiary) !important;
     border-color: var(--border-color) !important;
@@ -584,17 +546,10 @@ hr::after {
     color: var(--text-primary) !important;
 }
 
-/* 移动端优化 */
 @media (max-width: 768px) {
     .gothic-title { font-size: 28px; letter-spacing: 4px; }
     .gothic-title::before, .gothic-title::after { display: none; }
     .main .block-container { padding: 1rem; }
-}
-
-/* 加载动画 - 炼金术圆圈 */
-@keyframes alchemy-spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
 }
 
 .stSpinner > div {
@@ -604,12 +559,10 @@ hr::after {
     border-left-color: transparent !important;
 }
 
-/* 确保所有文字对比度 */
 p, h1, h2, h3, h4, h5, h6, span, label, .stMarkdown {
     color: var(--text-primary) !important;
 }
 
-/* 选择框选项 */
 div[role="listbox"] div {
     background-color: var(--bg-tertiary) !important;
     color: var(--text-primary) !important;
@@ -649,7 +602,6 @@ def generate_briefing(content, briefing_type, custom_req, api_key):
     try:
         client = OpenAI(api_key=api_key, base_url="https://api.siliconflow.cn/v1")
         
-        # 哥特式提示词
         prompts = {
             "会议纪要": """你是一位精通暗影艺术的书记官。请将以下语音内容整理成庄严的会议纪要：
             
@@ -704,39 +656,25 @@ def generate_briefing(content, briefing_type, custom_req, api_key):
     except Exception as e:
         return {"success": False, "error": str(e)}
 
-# ========== 界面布局 ==========
-
-# 标题
-st.markdown('<div class="gothic-title">VIGIL AETERNUS</div>', unsafe_allow_html=True)
-st.markdown('<div class="gothic-subtitle">永恒守望者 · 语音炼金术</div>', unsafe_allow_html=True)
-
-# API密钥管理
-api_key = st.secrets.get("SILICONFLOW_API_KEY", "")
-
-# 修复后的密钥获取逻辑（第 310-320 行）
+# ========== API 密钥管理（修复版）==========
+# 优先从 secrets 获取，否则从 session_state 获取
 api_key = None
 
-# 1. 首先检查 st.secrets（部署环境）
+# 首先检查 st.secrets（部署环境）
 try:
     api_key = st.secrets.get("SILICONFLOW_API_KEY", "")
 except:
     pass
 
-# 2. 如果 secrets 中没有，检查 session_state（用户输入）
+# 如果 secrets 中没有，检查 session_state（用户输入）
 if not api_key:
     api_key = st.session_state.get("api_key", "")
 
-# 3. 如果都没有，显示输入界面
+# 如果都没有，显示输入界面
 if not api_key:
-    # ... 显示输入表单 ...
-    if st.button("⚡ 激活炼金引擎"):
-        if api_input.startswith("sk-"):
-            st.session_state.api_key = api_input  # 保存到 session_state
-            st.success("✦ 炼金引擎已唤醒 ✦")
-            time.sleep(1)
-            st.rerun()  # 关键：刷新页面进入主应用
-
-if not api_key:
+    st.markdown('<div class="gothic-title">VIGIL AETERNUS</div>', unsafe_allow_html=True)
+    st.markdown('<div class="gothic-subtitle">永恒守望者 · 语音炼金术</div>', unsafe_allow_html=True)
+    
     with st.expander("🔑 唤醒炼金引擎（输入API密钥）", expanded=True):
         st.markdown("""
         <div style="background: rgba(139,0,0,0.05); padding: 20px; border-radius: 8px; border-left: 3px solid #8b0000;">
@@ -761,6 +699,7 @@ if not api_key:
         with col2:
             if st.button("⚡ 激活炼金引擎", type="primary", use_container_width=True):
                 if api_input and api_input.startswith("sk-"):
+                    # 保存到 session_state
                     st.session_state.api_key = api_input
                     st.success("✦ 炼金引擎已唤醒 ✦")
                     time.sleep(1)
@@ -770,12 +709,15 @@ if not api_key:
     
     st.stop()
 
+# ========== 主应用界面 ==========
+st.markdown('<div class="gothic-title">VIGIL AETERNUS</div>', unsafe_allow_html=True)
+st.markdown('<div class="gothic-subtitle">永恒守望者 · 语音炼金术</div>', unsafe_allow_html=True)
+
 # 侧边栏 - 暗影之书
 with st.sidebar:
     st.markdown('<div style="text-align: center; color: #8b0000; font-size: 24px; margin-bottom: 20px;">◈</div>', unsafe_allow_html=True)
     st.markdown('<div style="text-align: center; color: #c0c0c0; font-family: serif; letter-spacing: 3px; margin-bottom: 30px;">炼金日志</div>', unsafe_allow_html=True)
     
-    # 状态指示器
     st.markdown("""
     <div class="status-indicator" style="margin-bottom: 20px;">
         <div class="status-dot"></div>
@@ -784,18 +726,18 @@ with st.sidebar:
     """, unsafe_allow_html=True)
     
     if st.button("🗝️ 更换密钥", use_container_width=True):
-        del st.session_state.api_key
+        if "api_key" in st.session_state:
+            del st.session_state.api_key
         st.rerun()
     
     st.divider()
     
-    # 统计信息
     st.markdown('<div style="color: #666; font-size: 11px; letter-spacing: 2px; margin-bottom: 10px;">已捕获灵魂残片</div>', unsafe_allow_html=True)
     count = st.session_state.get("transcription_count", 0)
     st.markdown(f'<div style="color: #8b0000; font-size: 28px; font-family: monospace; text-align: center;">{count:,}</div>', unsafe_allow_html=True)
     
     st.divider()
-    st.caption("v2.0 · 哥特式暗黑版")
+    st.caption("v2.1 · 哥特式暗黑版 · 已修复")
 
 # 主界面 - 三栏炼金工坊
 col_left, col_center, col_right = st.columns([1, 1.2, 1])
@@ -807,7 +749,6 @@ with col_left:
         <div class="panel-title">灵魂捕获</div>
     """, unsafe_allow_html=True)
     
-    # 聆听之眼可视化
     st.markdown("""
     <div class="eye-button" onclick="document.querySelector('button[kind=secondary]').click()">
         <div class="eye-outer"></div>
@@ -819,7 +760,6 @@ with col_left:
     </div>
     """, unsafe_allow_html=True)
     
-    # 录音组件
     try:
         from streamlit_mic_recorder import mic_recorder
         
@@ -831,7 +771,6 @@ with col_left:
         )
         
         if audio and audio.get("bytes"):
-            # 计算时长
             bytes_data = audio["bytes"]
             sample_rate = audio.get("sample_rate", 16000)
             sample_width = audio.get("sample_width", 2)
@@ -840,7 +779,6 @@ with col_left:
             seconds = int(duration_seconds % 60)
             duration_str = f"{minutes:02d}:{seconds:02d}"
             
-            # 显示计时器
             st.markdown(f"""
             <div class="timer-display">
                 <div class="timer-value">{duration_str}</div>
@@ -865,7 +803,6 @@ with col_left:
     
     st.divider()
     
-    # 上传选项
     st.markdown('<div style="color: #888; font-size: 12px; margin-bottom: 10px;">或上传记忆残片</div>', unsafe_allow_html=True)
     
     audio_file = st.file_uploader(
@@ -898,14 +835,12 @@ with col_center:
         <div class="panel-title" style="color: #ff1a1a;">炼金工坊</div>
     """, unsafe_allow_html=True)
     
-    # 简报类型选择
     briefing_type = st.selectbox(
         "炼金仪式类型",
         ["会议纪要", "工作日报", "学习笔记", "新闻摘要"],
         key="briefing_type"
     )
     
-    # 文本编辑区
     default_text = st.session_state.get("transcribed_text", "")
     
     content = st.text_area(
@@ -919,14 +854,12 @@ with col_center:
     if content != st.session_state.get("transcribed_text", ""):
         st.session_state.transcribed_text = content
     
-    # 特殊要求
     custom_req = st.text_input(
         "特殊炼金指令",
         placeholder="例如：强调时间紧迫性、突出风险...",
         key="custom_requirements"
     )
     
-    # 操作按钮
     col_gen, col_clear = st.columns([2, 1])
     
     with col_gen:
@@ -962,7 +895,6 @@ with col_right:
     if "generated_result" in st.session_state:
         result_text = st.session_state.generated_result
         
-        # 输出显示
         st.markdown(f"""
         <div class="output-scroll">
             <div style="color: #8b0000; font-weight: bold; margin-bottom: 15px; border-bottom: 1px solid #2a2a30; padding-bottom: 10px;">
@@ -975,7 +907,6 @@ with col_right:
         </div>
         """, unsafe_allow_html=True)
         
-        # 下载按钮
         col_dl, col_copy = st.columns(2)
         
         with col_dl:
