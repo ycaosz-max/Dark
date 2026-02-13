@@ -755,7 +755,7 @@ with col_center:
         "原始灵魂印记",
         value=default_text,
         height=300,
-        placeholder="语音转写内容会出现在这里..."
+        placeholder="是原始灵魂的捕获，抑或是记忆碎片的再现..."
     )
     
     # 同步更新 session_state
