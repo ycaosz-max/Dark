@@ -721,11 +721,22 @@ with col_center:
         <div class="panel-title" style="color: #ff1a1a;">炼金工坊</div>
     """, unsafe_allow_html=True)
     
-    briefing_type = st.selectbox(
+    # 定义哥特化名称与原始功能的映射，确保给大模型的指令依然精准
+    ritual_mapping = {
+        "仪式记录 (Ritual Transcript)": "会议纪要",
+        "昼夜之誓 (Daily Covenant)": "工作日报",
+        "智慧秘卷 (Arcane Codex)": "学习笔记",
+        "世界余响 (Echoes of Reality)": "新闻摘要"
+    }
+    
+    selected_ritual = st.selectbox(
         "炼金仪式类型",
-        ["会议纪要", "工作日报", "学习笔记", "新闻摘要"],
+        options=list(ritual_mapping.keys()),
         key="briefing_type_select"
     )
+    
+    # 获取原始功能定义用于后台逻辑
+    briefing_type = ritual_mapping[selected_ritual]
     
     # 参考 v2.1.1：使用 session_state.get 获取默认值
     default_text = st.session_state.get("transcribed_text", "")
