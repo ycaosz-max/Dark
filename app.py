@@ -506,7 +506,17 @@ def transcribe_audio(audio_bytes, api_key):
             )
         
         os.unlink(tmp_path)
-        return {"success": True, "text": transcription}
+        # 兼容性处理：有些 API 返回的是 JSON 字符串 {"text": "..."}, 有些是纯文本
+        clean_text = str(transcription)
+        if clean_text.startswith('{') and '"text"' in clean_text:
+            try:
+                import json
+                data = json.loads(clean_text)
+                clean_text = data.get("text", clean_text)
+            except:
+                pass
+        
+        return {"success": True, "text": clean_text}
         
     except Exception as e:
         return {"success": False, "error": str(e)}
