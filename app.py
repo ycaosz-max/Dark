@@ -792,7 +792,7 @@ with col_right:
         st.markdown(f"""
         <div class="output-scroll">
             <div style="color: #8b0000; font-weight: bold; margin-bottom: 15px; border-bottom: 1px solid #2a2a30; padding-bottom: 10px;">
-                ◈ {briefing_type} ◈
+                ◈ {selected_ritual} ◈
             </div>
             <div style="white-space: pre-wrap;">{result_text}</div>
         </div>
@@ -801,7 +801,7 @@ with col_right:
         st.download_button(
             "⬇ 封存卷轴",
             result_text,
-            file_name=f"{briefing_type}_{time.strftime('%Y%m%d_%H%M')}.txt",
+            file_name=f"{selected_ritual}_{time.strftime('%Y%m%d_%H%M')}.txt",
             use_container_width=True
         )
     else:
