@@ -1,6 +1,6 @@
-# AI简报小助手 - 哥特式暗黑版 v2.5
-# 回退：使用 v2.3 的转录逻辑（已验证可行）
-# 修复：按钮背景色、标题居中、使用标准 rerun
+# AI简报小助手 - 哥特式暗黑版 v2.6
+# 转录逻辑参考：v2.1.1（已验证正常）
+# 修复：按钮背景色、标题居中
 
 import streamlit as st
 from openai import OpenAI
@@ -550,21 +550,9 @@ if "transcribed_text" not in st.session_state:
     st.session_state.transcribed_text = ""
 if "generated_result" not in st.session_state:
     st.session_state.generated_result = ""
-if "transcription_count" not in st.session_state:
-    st.session_state.transcription_count = 0
-if "last_duration" not in st.session_state:
-    st.session_state.last_duration = ""
 
 # ========== API 密钥管理 ==========
-api_key = None
-
-try:
-    api_key = st.secrets.get("SILICONFLOW_API_KEY", "")
-except:
-    pass
-
-if not api_key:
-    api_key = st.session_state.get("api_key", "")
+api_key = st.session_state.get("api_key", "")
 
 if not api_key:
     st.markdown('<div class="gothic-title">VIGIL AETERNUS</div>', unsafe_allow_html=True)
@@ -620,17 +608,11 @@ with st.sidebar:
     """, unsafe_allow_html=True)
     
     if st.button("🗝️ 更换密钥", use_container_width=True):
-        if "api_key" in st.session_state:
-            del st.session_state.api_key
+        del st.session_state.api_key
         st.rerun()
     
     st.divider()
-    
-    st.markdown('<div style="color: #666; font-size: 11px; margin-bottom: 10px;">已捕获灵魂残片</div>', unsafe_allow_html=True)
-    st.markdown(f'<div style="color: #8b0000; font-size: 28px; font-family: monospace; text-align: center;">{st.session_state.transcription_count:,}</div>', unsafe_allow_html=True)
-    
-    st.divider()
-    st.caption("v2.5 · 已修复")
+    st.caption("v2.6 · 转录已修复")
 
 # 主界面 - 三栏布局
 col_left, col_center, col_right = st.columns([1, 1.2, 1])
@@ -653,7 +635,7 @@ with col_left:
     </div>
     """, unsafe_allow_html=True)
     
-    # 实时录音 - 回退到 v2.3 逻辑
+    # 实时录音 - 使用 v2.1.1 逻辑（已验证正常）
     try:
         from streamlit_mic_recorder import mic_recorder
         
@@ -661,49 +643,27 @@ with col_left:
             start_prompt="🩸 开始聆听",
             stop_prompt="⏹ 封印灵魂",
             just_once=True,
-            key="gothic_recorder_main"
+            key="mic_recorder_ios"
         )
         
-        # 处理录音 - 不使用 rerun，直接显示结果（v2.3 逻辑）
+        # 参考 v2.1.1：转录成功后保存到 session_state 然后 rerun
         if audio and audio.get("bytes"):
-            bytes_data = audio["bytes"]
-            sample_rate = audio.get("sample_rate", 16000)
-            sample_width = audio.get("sample_width", 2)
-            duration_seconds = len(bytes_data) / (sample_rate * sample_width)
-            minutes = int(duration_seconds // 60)
-            seconds = int(duration_seconds % 60)
-            duration_str = f"{minutes:02d}:{seconds:02d}"
-            
-            # 显示计时器
-            st.markdown(f"""
-            <div class="timer-display">
-                <div class="timer-value">{duration_str}</div>
-                <div style="color: #666; font-size: 11px;">灵魂时长</div>
-            </div>
-            """, unsafe_allow_html=True)
-            
-            # 转录
             with st.spinner("⚗️ 炼金转录中..."):
                 result = transcribe_audio(audio["bytes"], api_key)
                 
                 if result["success"]:
-                    # 更新 session_state
                     st.session_state.transcribed_text = result["text"]
-                    st.session_state.last_duration = duration_str
-                    st.session_state.transcription_count += 1
                     st.success(f"✦ 灵魂已捕获 | {len(result['text'])} 字符")
-                    # 使用标准 rerun（v2.3 原本使用 experimental_rerun，现在改为标准 rerun）
                     st.rerun()
                 else:
                     st.error(f"✦ 转录失败: {result['error']}")
                     
     except ImportError:
         st.error("⚠️ 录音组件未就绪")
-        st.info("请安装: pip install streamlit-mic-recorder")
     
     st.divider()
     
-    # 文件上传 - 回退到 v2.3 逻辑
+    # 文件上传 - 使用 v2.1.1 逻辑（已验证正常）
     st.markdown('<div style="color: #888; font-size: 12px; margin-bottom: 10px;">或上传记忆残片</div>', unsafe_allow_html=True)
     
     audio_file = st.file_uploader(
@@ -722,7 +682,6 @@ with col_left:
                 
                 if result["success"]:
                     st.session_state.transcribed_text = result["text"]
-                    st.session_state.transcription_count += 1
                     st.success(f"✦ 转录完成 | {len(result['text'])} 字符")
                     st.rerun()
                 else:
@@ -743,26 +702,23 @@ with col_center:
         key="briefing_type_select"
     )
     
-    # 文本编辑区 - 使用 session_state 的值（v2.3 逻辑）
+    # 参考 v2.1.1：使用 session_state.get 获取默认值
+    default_text = st.session_state.get("transcribed_text", "")
+    
     content = st.text_area(
         "原始灵魂印记",
-        value=st.session_state.transcribed_text,
-        height=280,
-        placeholder="在此刻下你的话语，或等待语音捕获...\n\n如同在羊皮纸上书写，每一个字都将被永恒铭记。",
-        key="content_editor_main"
+        value=default_text,
+        height=300,
+        placeholder="语音转写内容会出现在这里..."
     )
     
     # 同步更新 session_state
-    if content != st.session_state.transcribed_text:
+    if content != st.session_state.get("transcribed_text", ""):
         st.session_state.transcribed_text = content
     
-    custom_req = st.text_input(
-        "特殊炼金指令",
-        placeholder="例如：强调时间紧迫性、突出风险...",
-        key="custom_req_input"
-    )
+    custom_req = st.text_input("特殊炼金指令", placeholder="例如：强调时间紧迫性、突出风险...")
     
-    col_gen, col_clear = st.columns([2, 1])
+    col_gen, col_clear = st.columns([3, 1])
     
     with col_gen:
         if st.button("⚡ 启动炼金术", type="primary", use_container_width=True):
@@ -774,7 +730,6 @@ with col_center:
                     
                     if result["success"]:
                         st.session_state.generated_result = result["text"]
-                        st.success("✦ 炼金完成 ✦")
                         st.rerun()
                     else:
                         st.error(f"✦ 炼金失败: {result['error']}")
@@ -782,7 +737,8 @@ with col_center:
     with col_clear:
         if st.button("🗑️ 净化", use_container_width=True):
             st.session_state.transcribed_text = ""
-            st.session_state.generated_result = ""
+            if "generated_result" in st.session_state:
+                del st.session_state.generated_result
             st.rerun()
     
     st.markdown("</div>", unsafe_allow_html=True)
@@ -794,7 +750,7 @@ with col_right:
         <div class="panel-title">预言书卷</div>
     """, unsafe_allow_html=True)
     
-    if st.session_state.generated_result:
+    if "generated_result" in st.session_state:
         result_text = st.session_state.generated_result
         
         st.markdown(f"""
@@ -803,21 +759,15 @@ with col_right:
                 ◈ {briefing_type} ◈
             </div>
             <div style="white-space: pre-wrap;">{result_text}</div>
-            <div style="margin-top: 20px; padding-top: 10px; border-top: 1px solid #2a2a30; color: #444; font-size: 10px; text-align: right;">
-                生成于 {time.strftime("%H:%M")}
-            </div>
         </div>
         """, unsafe_allow_html=True)
         
-        col_dl, _ = st.columns([1, 1])
-        
-        with col_dl:
-            st.download_button(
-                "⬇ 封存卷轴",
-                result_text,
-                file_name=f"{briefing_type}_{time.strftime('%Y%m%d_%H%M')}.txt",
-                use_container_width=True
-            )
+        st.download_button(
+            "⬇ 封存卷轴",
+            result_text,
+            file_name=f"{briefing_type}_{time.strftime('%Y%m%d_%H%M')}.txt",
+            use_container_width=True
+        )
     else:
         st.markdown("""
         <div style="text-align: center; padding: 60px 20px; color: #333;">
@@ -838,3 +788,5 @@ st.markdown("""
     <span style="font-size: 9px; opacity: 0.6;">记住你终将死去，因此每一句话都值得被铭记</span>
 </div>
 """, unsafe_allow_html=True)
+
+st.caption("")
