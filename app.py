@@ -349,14 +349,39 @@ header[data-testid="stHeader"] { display: none; }
     font-weight: bold !important;
 }
 
-/* 修复：强制文件上传区域为暗黑 */
+/* 修复：强制文件上传区域为暗黑并汉化提示 */
 .stFileUploader > div > div {
     background-color: #1a1a20 !important;
-    border: 2px dashed #2a2a30 !important;
-    color: #666666 !important;
+    border: 1px dashed #8b0000 !important;
+    color: #c0c0c0 !important;
     border-radius: 8px !important;
-    /* 强制覆盖 */
-    background: #1a1a20 !important;
+}
+
+/* 汉化上传区域文字 */
+.stFileUploader section > div > div > span {
+    display: none !important;
+}
+.stFileUploader section > div > div::before {
+    content: "将记忆残片拖拽至此" !important;
+    color: #c0c0c0 !important;
+    font-size: 16px !important;
+}
+.stFileUploader section > div > div > small {
+    display: none !important;
+}
+.stFileUploader section > div > div::after {
+    content: "每个残片限 200MB 以内" !important;
+    color: #666 !important;
+    font-size: 12px !important;
+    display: block !important;
+    margin-top: 5px !important;
+}
+.stFileUploader button {
+    font-size: 0 !important;
+}
+.stFileUploader button::before {
+    content: "浏览档案" !important;
+    font-size: 12px !important;
 }
 
 .stFileUploader > div > div:hover {
