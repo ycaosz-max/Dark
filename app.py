@@ -762,7 +762,7 @@ with col_center:
     if content != st.session_state.get("transcribed_text", ""):
         st.session_state.transcribed_text = content
     
-    custom_req = st.text_input("特殊炼金指令", placeholder="例如：强调时间紧迫性、突出风险...")
+    custom_req = st.text_input("特殊炼金指令", placeholder="听灵魂出窍的声音...")
     
     col_gen, col_clear = st.columns([3, 1])
     
