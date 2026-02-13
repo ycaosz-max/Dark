@@ -380,7 +380,7 @@ header[data-testid="stHeader"] { display: none; }
     font-size: 0 !important;
 }
 .stFileUploader button::before {
-    content: "浏览档案" !important;
+    content: "时光回流" !important;
     font-size: 12px !important;
 }
 
@@ -647,7 +647,7 @@ with st.sidebar:
         st.rerun()
     
     st.divider()
-    st.caption("v2.6 · 转录已修复")
+    st.caption("v2.6·哥特式暗黑版")
 
 # 主界面 - 三栏布局
 col_left, col_center, col_right = st.columns([1, 1.2, 1])
@@ -733,10 +733,10 @@ with col_center:
     
     # 定义哥特化名称与原始功能的映射，确保给大模型的指令依然精准
     ritual_mapping = {
-        "仪式记录 (Ritual Transcript)": "会议纪要",
-        "昼夜之誓 (Daily Covenant)": "工作日报",
-        "智慧秘卷 (Arcane Codex)": "学习笔记",
-        "世界余响 (Echoes of Reality)": "新闻摘要"
+        "仪式记录": "会议纪要",
+        "昼夜之誓": "工作日报",
+        "智慧秘卷": "学习笔记",
+        "世界余响": "新闻摘要"
     }
     
     selected_ritual = st.selectbox(
