@@ -1,6 +1,5 @@
-# AI简报小助手 - 哥特式暗黑版 v2.6
-# 转录逻辑参考：v2.1.1（已验证正常）
-# 修复：按钮背景色、标题居中
+# AI简报小助手 - 哥特式暗黑版 v2.7
+# 修复：API 密钥持久化存储（使用浏览器 localStorage）
 
 import streamlit as st
 from openai import OpenAI
@@ -30,6 +29,34 @@ if (document.body) {
     document.body.style.backgroundColor = '#050508';
     document.body.style.color = '#a0a0a0';
 }
+
+// API 密钥持久化存储
+function saveApiKey(key) {
+    localStorage.setItem('vigil_aeternus_api_key', key);
+    console.log('API 密钥已保存到本地存储');
+}
+
+function getApiKey() {
+    return localStorage.getItem('vigil_aeternus_api_key');
+}
+
+function clearApiKey() {
+    localStorage.removeItem('vigil_aeternus_api_key');
+}
+
+// 页面加载时检查是否有存储的密钥
+window.addEventListener('load', function() {
+    const storedKey = getApiKey();
+    if (storedKey) {
+        console.log('发现存储的 API 密钥');
+        // 将密钥发送到 Streamlit
+        const input = document.querySelector('input[type="password"]');
+        if (input && !input.value) {
+            input.value = storedKey;
+            input.dispatchEvent(new Event('input', { bubbles: true }));
+        }
+    }
+});
 
 // 录音计时器
 let recordingTimer = null;
@@ -161,7 +188,7 @@ st.set_page_config(
     layout="wide"
 )
 
-# ========== 哥特式暗黑CSS（强制覆盖所有系统主题）=========
+# ========== 哥特式暗黑CSS ==========
 st.markdown("""
 <style>
 /* 强制暗黑基础变量 */
@@ -178,11 +205,8 @@ st.markdown("""
     --border-color: #2a2a30 !important;
 }
 
-/* 强制应用背景色，覆盖系统偏好 */
 @media (prefers-color-scheme: light) {
-    .stApp {
-        background-color: #050508 !important;
-    }
+    .stApp { background-color: #050508 !important; }
 }
 
 .stApp {
@@ -199,7 +223,6 @@ header[data-testid="stHeader"] { display: none; }
     max-width: 1200px;
 }
 
-/* 修复：标题换行居中 */
 .gothic-title {
     font-size: 42px;
     color: #c0c0c0 !important;
@@ -211,7 +234,6 @@ header[data-testid="stHeader"] { display: none; }
     text-shadow: 0 0 20px rgba(139, 0, 0, 0.5);
     border-bottom: 2px solid #8b0000;
     padding-bottom: 15px;
-    /* 关键修复：确保换行后居中 */
     word-wrap: break-word;
     white-space: normal;
     line-height: 1.2;
@@ -219,16 +241,13 @@ header[data-testid="stHeader"] { display: none; }
     width: 100%;
 }
 
-/* 手机端标题适配 */
 @media (max-width: 768px) {
     .gothic-title {
         font-size: 28px !important;
         letter-spacing: 4px !important;
         padding: 0 10px;
     }
-    .gothic-title::before, .gothic-title::after {
-        display: none !important;
-    }
+    .gothic-title::before, .gothic-title::after { display: none !important; }
 }
 
 .gothic-title::before, .gothic-title::after {
@@ -319,7 +338,6 @@ header[data-testid="stHeader"] { display: none; }
     50% { transform: scale(1.2); opacity: 1; }
 }
 
-/* 修复：强制按钮样式，不受系统主题影响 */
 .stButton>button {
     background: linear-gradient(135deg, #1a0000, #2a0000) !important;
     color: #c0c0c0 !important;
@@ -331,7 +349,6 @@ header[data-testid="stHeader"] { display: none; }
     text-transform: uppercase !important;
     font-size: 12px !important;
     transition: all 0.3s ease !important;
-    /* 强制覆盖系统颜色 */
     -webkit-appearance: none !important;
     appearance: none !important;
 }
@@ -349,7 +366,6 @@ header[data-testid="stHeader"] { display: none; }
     font-weight: bold !important;
 }
 
-/* 修复：强制文件上传区域为暗黑并汉化提示 */
 .stFileUploader > div > div {
     background-color: #1a1a20 !important;
     border: 1px dashed #8b0000 !important;
@@ -357,18 +373,13 @@ header[data-testid="stHeader"] { display: none; }
     border-radius: 8px !important;
 }
 
-/* 汉化上传区域文字 */
-.stFileUploader section > div > div > span {
-    display: none !important;
-}
+.stFileUploader section > div > div > span { display: none !important; }
 .stFileUploader section > div > div::before {
     content: "将记忆残片拖拽至此" !important;
     color: #c0c0c0 !important;
     font-size: 16px !important;
 }
-.stFileUploader section > div > div > small {
-    display: none !important;
-}
+.stFileUploader section > div > div > small { display: none !important; }
 .stFileUploader section > div > div::after {
     content: "每个残片限 200MB 以内" !important;
     color: #666 !important;
@@ -376,9 +387,7 @@ header[data-testid="stHeader"] { display: none; }
     display: block !important;
     margin-top: 5px !important;
 }
-.stFileUploader button {
-    font-size: 0 !important;
-}
+.stFileUploader button { font-size: 0 !important; }
 .stFileUploader button::before {
     content: "时光回流" !important;
     font-size: 12px !important;
@@ -389,7 +398,6 @@ header[data-testid="stHeader"] { display: none; }
     background-color: rgba(139, 0, 0, 0.05) !important;
 }
 
-/* 修复：强制输入框为暗黑 */
 .stTextInput input, .stTextArea textarea, .stSelectbox > div > div {
     background-color: #1a1a20 !important;
     color: #c0c0c0 !important;
@@ -447,10 +455,7 @@ section[data-testid="stSidebar"] {
     width: 8px;
 }
 
-::-webkit-scrollbar-track {
-    background: #0a0a0f;
-}
-
+::-webkit-scrollbar-track { background: #0a0a0f; }
 ::-webkit-scrollbar-thumb {
     background: #8b0000;
     border-radius: 4px;
@@ -471,12 +476,10 @@ section[data-testid="stSidebar"] {
     50% { opacity: 0.3; }
 }
 
-/* 强制所有文本颜色 */
 p, h1, h2, h3, h4, h5, h6, span, label, .stMarkdown {
     color: #c0c0c0 !important;
 }
 
-/* 强制选择框选项为暗黑 */
 div[role="listbox"] div {
     background-color: #1a1a20 !important;
     color: #c0c0c0 !important;
@@ -506,7 +509,6 @@ def transcribe_audio(audio_bytes, api_key):
             )
         
         os.unlink(tmp_path)
-        # 兼容性处理：有些 API 返回的是 JSON 字符串 {"text": "..."}, 有些是纯文本
         clean_text = str(transcription)
         if clean_text.startswith('{') and '"text"' in clean_text:
             try:
@@ -586,9 +588,23 @@ if "transcribed_text" not in st.session_state:
 if "generated_result" not in st.session_state:
     st.session_state.generated_result = ""
 
-# ========== API 密钥管理 ==========
-api_key = st.session_state.get("api_key", "")
+# ========== API 密钥管理（修复：持久化存储）==========
 
+# 1. 首先检查 st.secrets（部署环境）
+api_key = None
+try:
+    api_key = st.secrets.get("SILICONFLOW_API_KEY", "")
+    if api_key:
+        # 如果 secrets 中有，同时保存到 session_state 以便后续使用
+        st.session_state.api_key = api_key
+except:
+    pass
+
+# 2. 如果 secrets 中没有，检查 session_state（当前会话）
+if not api_key:
+    api_key = st.session_state.get("api_key", "")
+
+# 3. 如果都没有，显示输入界面
 if not api_key:
     st.markdown('<div class="gothic-title">VIGIL AETERNUS</div>', unsafe_allow_html=True)
     st.markdown('<div class="gothic-subtitle">永恒守望者 · 语音炼金术</div>', unsafe_allow_html=True)
@@ -600,7 +616,8 @@ if not api_key:
                 要启动这台古老的语音炼金装置，你需要提供灵魂密钥：<br><br>
                 1. 前往 <a href="https://siliconflow.cn" style="color: #ff1a1a;">siliconflow.cn</a> 进行血之契约（注册）<br>
                 2. 在祭坛上创建 API 密钥<br>
-                3. 将密钥刻入下方石碑
+                3. 将密钥刻入下方石碑<br><br>
+                <small style="color: #666;">密钥将被保存在浏览器本地存储中，下次无需重复输入</small>
             </p>
         </div>
         """, unsafe_allow_html=True)
@@ -612,6 +629,14 @@ if not api_key:
             placeholder="sk-xxxxxxxxxxxxxxxx",
             key="api_key_input"
         )
+        
+        # 添加 JavaScript 保存功能
+        if api_input:
+            st.markdown(f"""
+            <script>
+                saveApiKey('{api_input}');
+            </script>
+            """, unsafe_allow_html=True)
         
         col1, col2, col3 = st.columns([1, 2, 1])
         with col2:
@@ -643,11 +668,16 @@ with st.sidebar:
     """, unsafe_allow_html=True)
     
     if st.button("🗝️ 更换密钥", use_container_width=True):
-        del st.session_state.api_key
+        # 清除 session_state 和浏览器存储
+        if "api_key" in st.session_state:
+            del st.session_state.api_key
+        st.markdown("""
+        <script>clearApiKey();</script>
+        """, unsafe_allow_html=True)
         st.rerun()
     
     st.divider()
-    st.caption("v2.6·哥特式暗黑版")
+    st.caption("v2.7 · 密钥持久化存储")
 
 # 主界面 - 三栏布局
 col_left, col_center, col_right = st.columns([1, 1.2, 1])
@@ -670,7 +700,7 @@ with col_left:
     </div>
     """, unsafe_allow_html=True)
     
-    # 实时录音 - 使用 v2.1.1 逻辑（已验证正常）
+    # 实时录音
     try:
         from streamlit_mic_recorder import mic_recorder
         
@@ -681,7 +711,6 @@ with col_left:
             key="mic_recorder_ios"
         )
         
-        # 参考 v2.1.1：转录成功后保存到 session_state 然后 rerun
         if audio and audio.get("bytes"):
             with st.spinner("⚗️ 炼金转录中..."):
                 result = transcribe_audio(audio["bytes"], api_key)
@@ -698,7 +727,7 @@ with col_left:
     
     st.divider()
     
-    # 文件上传 - 使用 v2.1.1 逻辑（已验证正常）
+    # 文件上传
     st.markdown('<div style="color: #888; font-size: 12px; margin-bottom: 10px;">或上传记忆残片</div>', unsafe_allow_html=True)
     
     audio_file = st.file_uploader(
@@ -731,7 +760,6 @@ with col_center:
         <div class="panel-title" style="color: #ff1a1a;">炼金工坊</div>
     """, unsafe_allow_html=True)
     
-    # 定义哥特化名称与原始功能的映射，确保给大模型的指令依然精准
     ritual_mapping = {
         "仪式记录": "会议纪要",
         "昼夜之誓": "工作日报",
@@ -745,10 +773,8 @@ with col_center:
         key="briefing_type_select"
     )
     
-    # 获取原始功能定义用于后台逻辑
     briefing_type = ritual_mapping[selected_ritual]
     
-    # 参考 v2.1.1：使用 session_state.get 获取默认值
     default_text = st.session_state.get("transcribed_text", "")
     
     content = st.text_area(
@@ -758,7 +784,6 @@ with col_center:
         placeholder="是原始灵魂的捕获，抑或是记忆碎片的再现..."
     )
     
-    # 同步更新 session_state
     if content != st.session_state.get("transcribed_text", ""):
         st.session_state.transcribed_text = content
     
