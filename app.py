@@ -349,14 +349,39 @@ header[data-testid="stHeader"] { display: none; }
     font-weight: bold !important;
 }
 
-/* 修复：强制文件上传区域为暗黑 */
+/* 修复：强制文件上传区域为暗黑并汉化提示 */
 .stFileUploader > div > div {
     background-color: #1a1a20 !important;
-    border: 2px dashed #2a2a30 !important;
-    color: #666666 !important;
+    border: 1px dashed #8b0000 !important;
+    color: #c0c0c0 !important;
     border-radius: 8px !important;
-    /* 强制覆盖 */
-    background: #1a1a20 !important;
+}
+
+/* 汉化上传区域文字 */
+.stFileUploader section > div > div > span {
+    display: none !important;
+}
+.stFileUploader section > div > div::before {
+    content: "将记忆残片拖拽至此" !important;
+    color: #c0c0c0 !important;
+    font-size: 16px !important;
+}
+.stFileUploader section > div > div > small {
+    display: none !important;
+}
+.stFileUploader section > div > div::after {
+    content: "每个残片限 200MB 以内" !important;
+    color: #666 !important;
+    font-size: 12px !important;
+    display: block !important;
+    margin-top: 5px !important;
+}
+.stFileUploader button {
+    font-size: 0 !important;
+}
+.stFileUploader button::before {
+    content: "浏览档案" !important;
+    font-size: 12px !important;
 }
 
 .stFileUploader > div > div:hover {
@@ -481,7 +506,17 @@ def transcribe_audio(audio_bytes, api_key):
             )
         
         os.unlink(tmp_path)
-        return {"success": True, "text": transcription}
+        # 兼容性处理：有些 API 返回的是 JSON 字符串 {"text": "..."}, 有些是纯文本
+        clean_text = str(transcription)
+        if clean_text.startswith('{') and '"text"' in clean_text:
+            try:
+                import json
+                data = json.loads(clean_text)
+                clean_text = data.get("text", clean_text)
+            except:
+                pass
+        
+        return {"success": True, "text": clean_text}
         
     except Exception as e:
         return {"success": False, "error": str(e)}
@@ -696,11 +731,22 @@ with col_center:
         <div class="panel-title" style="color: #ff1a1a;">炼金工坊</div>
     """, unsafe_allow_html=True)
     
-    briefing_type = st.selectbox(
+    # 定义哥特化名称与原始功能的映射，确保给大模型的指令依然精准
+    ritual_mapping = {
+        "仪式记录 (Ritual Transcript)": "会议纪要",
+        "昼夜之誓 (Daily Covenant)": "工作日报",
+        "智慧秘卷 (Arcane Codex)": "学习笔记",
+        "世界余响 (Echoes of Reality)": "新闻摘要"
+    }
+    
+    selected_ritual = st.selectbox(
         "炼金仪式类型",
-        ["会议纪要", "工作日报", "学习笔记", "新闻摘要"],
+        options=list(ritual_mapping.keys()),
         key="briefing_type_select"
     )
+    
+    # 获取原始功能定义用于后台逻辑
+    briefing_type = ritual_mapping[selected_ritual]
     
     # 参考 v2.1.1：使用 session_state.get 获取默认值
     default_text = st.session_state.get("transcribed_text", "")
@@ -756,7 +802,7 @@ with col_right:
         st.markdown(f"""
         <div class="output-scroll">
             <div style="color: #8b0000; font-weight: bold; margin-bottom: 15px; border-bottom: 1px solid #2a2a30; padding-bottom: 10px;">
-                ◈ {briefing_type} ◈
+                ◈ {selected_ritual} ◈
             </div>
             <div style="white-space: pre-wrap;">{result_text}</div>
         </div>
@@ -765,7 +811,7 @@ with col_right:
         st.download_button(
             "⬇ 封存卷轴",
             result_text,
-            file_name=f"{briefing_type}_{time.strftime('%Y%m%d_%H%M')}.txt",
+            file_name=f"{selected_ritual}_{time.strftime('%Y%m%d_%H%M')}.txt",
             use_container_width=True
         )
     else:
