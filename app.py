@@ -1,5 +1,5 @@
-# AI简报小助手 - 哥特式暗黑版 v2.2
-# 修复：语音转文字结果不显示的问题
+# AI简报小助手 - 哥特式暗黑版 v2.3
+# 修复：移除 experimental_rerun，使用标准 rerun
 
 import streamlit as st
 from openai import OpenAI
@@ -583,7 +583,7 @@ with st.sidebar:
     st.markdown(f'<div style="color: #8b0000; font-size: 28px; font-family: monospace; text-align: center;">{st.session_state.transcription_count:,}</div>', unsafe_allow_html=True)
     
     st.divider()
-    st.caption("v2.2 · 已修复转录显示")
+    st.caption("v2.3 · 已修复")
 
 # 主界面 - 三栏布局
 col_left, col_center, col_right = st.columns([1, 1.2, 1])
@@ -617,7 +617,7 @@ with col_left:
             key="gothic_recorder_main"
         )
         
-        # 关键修复：在这里处理录音，不使用 rerun()
+        # 处理录音 - 不使用 rerun，直接显示结果
         if audio and audio.get("bytes"):
             bytes_data = audio["bytes"]
             sample_rate = audio.get("sample_rate", 16000)
@@ -640,13 +640,13 @@ with col_left:
                 result = transcribe_audio(audio["bytes"], api_key)
                 
                 if result["success"]:
-                    # 直接更新 session_state，不调用 rerun()
+                    # 更新 session_state
                     st.session_state.transcribed_text = result["text"]
                     st.session_state.last_duration = duration_str
                     st.session_state.transcription_count += 1
                     st.success(f"✦ 灵魂已捕获 | {len(result['text'])} 字符")
-                    # 使用 experimental_rerun 替代 rerun 避免重置
-                    st.experimental_rerun()
+                    # 使用标准 rerun
+                    st.rerun()
                 else:
                     st.error(f"✦ 转录失败: {result['error']}")
                     
@@ -677,7 +677,7 @@ with col_left:
                     st.session_state.transcribed_text = result["text"]
                     st.session_state.transcription_count += 1
                     st.success(f"✦ 转录完成 | {len(result['text'])} 字符")
-                    st.experimental_rerun()
+                    st.rerun()
                 else:
                     st.error(f"✦ 失败: {result['error']}")
     
@@ -696,7 +696,7 @@ with col_center:
         key="briefing_type_select"
     )
     
-    # 关键修复：使用 value 参数绑定 session_state
+    # 文本编辑区 - 关键：使用 session_state 的值
     content = st.text_area(
         "原始灵魂印记",
         value=st.session_state.transcribed_text,
@@ -705,7 +705,7 @@ with col_center:
         key="content_editor_main"
     )
     
-    # 同步更新
+    # 同步更新 session_state
     if content != st.session_state.transcribed_text:
         st.session_state.transcribed_text = content
     
@@ -728,7 +728,7 @@ with col_center:
                     if result["success"]:
                         st.session_state.generated_result = result["text"]
                         st.success("✦ 炼金完成 ✦")
-                        st.experimental_rerun()
+                        st.rerun()
                     else:
                         st.error(f"✦ 炼金失败: {result['error']}")
     
@@ -736,7 +736,7 @@ with col_center:
         if st.button("🗑️ 净化", use_container_width=True):
             st.session_state.transcribed_text = ""
             st.session_state.generated_result = ""
-            st.experimental_rerun()
+            st.rerun()
     
     st.markdown("</div>", unsafe_allow_html=True)
 
