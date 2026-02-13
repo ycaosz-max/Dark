@@ -587,7 +587,7 @@ if "generated_result" not in st.session_state:
     st.session_state.generated_result = ""
 
 # ========== API 密钥管理 ==========
-api_key = st.session_state.get("api_key", "")
+api_key = st.secrets.get("SILICONFLOW_API_KEY", "")
 
 if not api_key:
     st.markdown('<div class="gothic-title">VIGIL AETERNUS</div>', unsafe_allow_html=True)
