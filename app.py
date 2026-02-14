@@ -588,21 +588,20 @@ if "transcribed_text" not in st.session_state:
 if "generated_result" not in st.session_state:
     st.session_state.generated_result = ""
 
-# ========== API 密钥管理（修复：持久化存储）==========
+# ========== API 密钥管理（优化：自动获取 + 持久化存储）==========
 
-# 1. 首先检查 st.secrets（部署环境）
-api_key = None
-try:
-    api_key = st.secrets.get("SILICONFLOW_API_KEY", "")
-    if api_key:
-        # 如果 secrets 中有，同时保存到 session_state 以便后续使用
-        st.session_state.api_key = api_key
-except:
-    pass
+# 1. 优先从 session_state 获取（当前会话或刚输入的情况）
+api_key = st.session_state.get("api_key", "")
 
-# 2. 如果 secrets 中没有，检查 session_state（当前会话）
+# 2. 其次尝试从 st.secrets 自动获取（Streamlit Cloud 部署环境）
 if not api_key:
-    api_key = st.session_state.get("api_key", "")
+    try:
+        # 兼容两种可能的密钥名称
+        api_key = st.secrets.get("SILICONFLOW_API_KEY") or st.secrets.get("api_key")
+        if api_key:
+            st.session_state.api_key = api_key
+    except:
+        pass
 
 # 3. 如果都没有，显示输入界面
 if not api_key:
