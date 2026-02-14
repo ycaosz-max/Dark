@@ -20,8 +20,9 @@ st.markdown("""
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="VIGIL AETERNUS">
 
-<!-- 哥特式图标 -->
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🩸</text></svg>">
+<!-- 哥特式图标 (iPhone PWA 图标) -->
+<link rel="apple-touch-icon" href="https://files.manuscdn.com/user_upload_by_module/session_file/310519663339342737/VLXWlLkCUwcdvAfu.png">
+<link rel="icon" href="https://files.manuscdn.com/user_upload_by_module/session_file/310519663339342737/VLXWlLkCUwcdvAfu.png">
 
 <script>
 // 强制暗黑模式
